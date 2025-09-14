@@ -35,7 +35,10 @@ class AuthController extends StateNotifier<AuthState> {
 
   Future<void> login(String email, String password) async {
     final repo = ref.read(authRepositoryProvider);
-    final token = await repo.login(email, password);
+    final response = await repo.login(email, password);
+
+    final token = response.token;
+
     await ref.read(storageServiceProvider).saveToken(token);
     state = AuthState(token: token);
   }
