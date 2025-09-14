@@ -1,8 +1,10 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../features/auth/providers/auth_providers.dart';
 import '../env/env.dart';
+import '../logging/logging.dart';
 
 class AuthTokenInterceptor extends Interceptor {
   final Ref ref;
@@ -14,6 +16,10 @@ class AuthTokenInterceptor extends Interceptor {
     if (token != null && token.isNotEmpty) {
       options.headers['Authorization'] = 'Bearer $token';
     }
+    final devToken = dotenv.env['X_NEXTFORM_DEV_TOKEN'];
+    if (devToken != null && devToken.isNotEmpty) {
+      options.headers['X-NEXTFORM-DEV-TOKEN'] = devToken;
+    }
     return handler.next(options);
   }
 }
@@ -21,26 +27,22 @@ class AuthTokenInterceptor extends Interceptor {
 class LoggingInterceptor extends Interceptor {
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
-    if (!Env.httpLogging || kReleaseMode) return handler.next(options);
-    // Keep logs terse; tune to your needs
-    // ignore: avoid_print
-    print('➡️ ${options.method} ${options.uri}');
+    if (!Env.httpLogging) return handler.next(options);
+    logger.info('➡️ ${options.method} ${options.uri}');
     return handler.next(options);
   }
 
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) {
-    if (!Env.httpLogging || kReleaseMode) return handler.next(response);
-    // ignore: avoid_print
-    print('✅ ${response.statusCode} ${response.requestOptions.uri}');
+    if (!Env.httpLogging) return handler.next(response);
+    logger.info('✅ ${response.statusCode} ${response.requestOptions.uri}');
     return handler.next(response);
   }
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
-    if (!Env.httpLogging || kReleaseMode) return handler.next(err);
-    // ignore: avoid_print
-    print(
+    if (!Env.httpLogging) return handler.next(err);
+    logger.severe(
       '❌ ${err.response?.statusCode} ${err.requestOptions.uri} — ${err.message}',
     );
     return handler.next(err);

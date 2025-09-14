@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/async_value_widget.dart';
-import '../../providers/profile_provider.dart';
+import '../../../profile/providers/profile_provider.dart';
 
 class HomeHeader extends ConsumerWidget {
   const HomeHeader({super.key});

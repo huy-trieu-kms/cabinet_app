@@ -1,5 +1,8 @@
+import 'package:cabinet_app/core/constants/router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import '../../../core/exceptions/api_exception.dart';
 import '../../../widgets/app_text_field.dart';
 import '../../../widgets/primary_button.dart';
 import '../providers/auth_providers.dart';
@@ -17,6 +20,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   final _passwordController = TextEditingController();
 
   bool _loading = false;
+  String? _errorMessage; // 🔹 store error inline
 
   @override
   void dispose() {
@@ -28,18 +32,30 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _loading = true);
+    setState(() {
+      _loading = true;
+      _errorMessage = null; // clear old error
+    });
+
     try {
       await ref
           .read(authControllerProvider.notifier)
           .login(_emailController.text.trim(), _passwordController.text.trim());
-      // After success, navigation handled by GoRouter guard.
+
+      if (!mounted) return;
+      context.go(RouteString.home);
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(e.toString())));
+      if (!mounted) return;
+
+      setState(() {
+        _errorMessage = e is ApiException
+            ? e.message
+            : 'Đã có lỗi xảy ra. Vui lòng thử lại.';
+      });
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted) {
+        setState(() => _loading = false);
+      }
     }
   }
 
@@ -55,10 +71,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               key: _formKey,
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: 40),
                   const Text(
                     "Đăng nhập",
+                    textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.w700,
@@ -66,6 +84,16 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     ),
                   ),
                   const SizedBox(height: 48),
+
+                  // 🔹 Inline error message
+                  if (_errorMessage != null) ...[
+                    Text(
+                      _errorMessage!,
+                      style: const TextStyle(color: Colors.red),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                  ],
 
                   /// Email field
                   AppTextField(
@@ -96,16 +124,27 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     loading: _loading,
                     onPressed: _submit,
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 20),
 
-                  /// Forgot password
-                  TextButton(
-                    onPressed: () {
-                      // TODO: forgot password flow
-                    },
-                    child: const Text(
-                      "Quên mật khẩu",
-                      style: TextStyle(color: Colors.black87),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () {
+                        context.go(RouteString.forgotPassword);
+                      },
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        minimumSize: const Size(0, 0),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      child: const Text(
+                        "Quên mật khẩu",
+                        style: TextStyle(
+                          color: Colors.blue,
+                          fontWeight: FontWeight.w500,
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
                     ),
                   ),
                 ],

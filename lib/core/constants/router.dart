@@ -4,5 +4,5 @@ class RouteString {
   static const String profile = '/profile';
   static const String notifications = '/notifications';
   static const String login = '/login';
-  static const String resetPassword = '/reset-password';
+  static const String forgotPassword = '/forgot-password';
 }

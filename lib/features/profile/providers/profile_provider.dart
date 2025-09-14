@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/mock_data.dart';
-import '../../../core/network/dio_provider.dart';
-import '../data/profile.dart';
+import '../../home/data/profile_model.dart';
 
 final profileProvider = FutureProvider<Profile>((ref) async {
   // final dio = ref.watch(dioProvider);

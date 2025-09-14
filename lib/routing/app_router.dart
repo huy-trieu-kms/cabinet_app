@@ -6,8 +6,8 @@ import '../features/auth/providers/auth_providers.dart';
 import '../features/home/presentation/home_page.dart';
 import '../features/meetings/presentation/meeting_page.dart';
 import '../features/notification/presentation/notification_page.dart';
-import '../features/profile/presentaion/profile_page.dart';
-import '../features/reset-password/presentation/reset_password.dart';
+import '../features/forgot-password/presentation/forgot_password.dart';
+import '../features/profile/presentation/profile_page.dart';
 import '../widgets/app_scaffold.dart';
 import 'router_notifier.dart';
 
@@ -25,11 +25,9 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const LoginPage(),
       ),
       GoRoute(
-        path: RouteString.resetPassword,
-        builder: (context, state) => const ResetPasswordPage(),
+        path: RouteString.forgotPassword,
+        builder: (context, state) => const ForgotPasswordPage(),
       ),
-
-      // 🔹 Bottom navigation shell
       ShellRoute(
         builder: (context, state, child) => AppScaffold(child: child),
         routes: [
@@ -57,14 +55,20 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
     ],
 
-    // 🔹 Redirect logic for auth
     redirect: (context, state) {
       final isLoggedIn = ref.read(authControllerProvider).isAuthenticated;
 
       final loggingIn = state.matchedLocation == '/login';
+      final resetting = state.matchedLocation == '/forgot-password';
 
-      if (!isLoggedIn) return loggingIn ? null : '/login';
-      if (isLoggedIn && loggingIn) return '/home';
+      if (!isLoggedIn) {
+        return (loggingIn || resetting) ? null : '/login';
+      }
+
+      if (isLoggedIn && (loggingIn || resetting)) {
+        return '/home';
+      }
+
       return null;
     },
   );
